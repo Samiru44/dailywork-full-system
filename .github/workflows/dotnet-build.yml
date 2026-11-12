@@ -9,6 +9,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dailywork
+          POSTGRES_PASSWORD: dailywork
+          POSTGRES_DB: dailywork
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dailywork -d dailywork"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -18,3 +32,35 @@ jobs:
         run: dotnet restore backend/DailyWork.Api/DailyWork.Api.csproj
       - name: Build
         run: dotnet build backend/DailyWork.Api/DailyWork.Api.csproj --configuration Release --no-restore
+
+      - name: Production PostgreSQL startup smoke test
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          Database__Provider: PostgreSQL
+          ConnectionStrings__Default: Host=localhost;Port=5432;Database=dailywork;Username=dailywork;Password=dailywork
+          DAILYWORK_ADMIN_NAME: CI Administrator
+          DAILYWORK_ADMIN_EMAIL: ci-admin@example.test
+          DAILYWORK_ADMIN_PASSWORD: CI-only-Integration-Password-9876
+          DAILYWORK_JWT_KEY: CI-only-JWT-signing-key-not-for-production-123456789
+          PORT: 5080
+        run: |
+          set -euo pipefail
+          dotnet run --no-build --no-launch-profile --project backend/DailyWork.Api/DailyWork.Api.csproj > app-smoke.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5080/swagger/v1/swagger.json > /dev/null; then
+              echo "Application started successfully with PostgreSQL and Production settings."
+              exit 0
+            fi
+            if ! kill -0 "$app_pid" 2>/dev/null; then
+              cat app-smoke.log
+              exit 1
+            fi
+            sleep 2
+          done
+
+          cat app-smoke.log
+          echo "Application did not become healthy in the allotted time."
+          exit 1
