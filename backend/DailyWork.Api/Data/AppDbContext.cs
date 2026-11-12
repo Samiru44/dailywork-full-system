@@ -130,7 +130,7 @@ public class AppDbContext : DbContext
         mb.Entity<Payment>()
           .HasIndex(p => p.ApplicationId)
           .IsUnique()
-          .HasFilter("ApplicationId IS NOT NULL");
+          .HasFilter("\"ApplicationId\" IS NOT NULL");
 
         // ---------------- Payment audit ----------------
         mb.Entity<PaymentAudit>().Property(a => a.AmountAtChange).HasConversion(MoneyConverter);
