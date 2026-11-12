@@ -1,0 +1,124 @@
+
+A. PUBLIC SITE AND HONEST CONTENT
+  PASS  home page renders
+  PASS  no fabricated 10,000+ figure  -> . 1,500 / Day · Colombo
+View All Jobs
+3
+
+  PASS  demo data is labelled
+  PASS  invented testimonials removed
+  PASS  pricing marked as not yet available
+  PASS  demo credentials no longer shown on login
+  PASS  contact form shows success only after the server accepts
+
+B. EMPLOYER POSTS A JOB
+  PASS  employer registered and signed in  -> #/dashboard
+  PASS  job posted through the form
+  PASS  job appears under My Jobs
+  PASS  verification panel shows the account is not verified
+
+C. WORKER FINDS AND APPLIES
+  PASS  worker registered
+  PASS  extended profile saved
+  PASS  recommendations panel renders
+  PASS  recommendations returned  -> 6 cards
+  PASS  match percentage shown
+  PASS  reasons shown for each recommendation  -> Welcome, Test Mason (worker) Recommended for You  Matched against your skills, d
+  PASS  job search page loads
+  PASS  minimum wage filter applied in the UI  -> ['6 jobs found']
+  PASS  sorting control works
+  PASS  job details page opens
+  PASS  details show the wage and positions
+  PASS  unverified employer flagged on the details page
+  PASS  application sent from the details page
+
+D. EMPLOYER HIRES, RECORDS WORK, VERIFIES
+  PASS  applicant listed with their details
+  PASS  applicant skills shown to the employer
+  PASS  shortlisting works
+  PASS  hiring works
+  PASS  work verified
+
+E. PAYMENT RECORDED AND CONFIRMED
+  PASS  payment raised automatically
+  PASS  payment reflects 3 days at the agreed rate  -> ['Rs. 7,200 to Test Mason', 'UI Test Mason Job · 3 day(s) at Rs. 2,400']
+  PASS  part payment recorded and balance shown  -> ["Rs. 3,000 paid · Rs. 4,200 outstanding · Rs. 3,000 awaiting the worker's confi
+  PASS  payment settled in full  -> ['Paid 11/12/2026 · awaiting worker confirmation']
+  PASS  employer is offered the review form
+  PASS  employer review saved
+  PASS  employer report renders
+  PASS  employer report shows the full settled amount  -> ['Total Spent', 'Outstanding']
+
+F. WORKER SEES EVERYTHING
+  PASS  worker sees the payment  -> ['Rs. 7,200', 'Rs. 7,200 — UI Test Mason Job']
+  PASS  worker sees the wage breakdown
+  PASS  worker can confirm receiving payment
+  PASS  worker notified: shortlisted
+  PASS  worker notified: hired
+  PASS  worker notified: work verified
+  PASS  worker notified: payment
+  PASS  worker notified: review
+  PASS  worker received the review
+  PASS  worker can review the employer back
+  PASS  worker report renders
+  PASS  worker report shows the full amount earned  -> ['Total Earned', 'Pending Wages']
+  PASS  profile shows work history
+  PASS  profile shows the rating earned
+
+G. ADMIN: VERIFICATION, CATEGORIES, MESSAGES, REPORTS
+  PASS  admin lands on the admin panel
+  PASS  verification queue renders
+  PASS  pending request listed  -> Admin Panel — System Administrator Organization Verification Pending Verified Re
+  PASS  admin can approve verification
+  PASS  category manager renders
+  PASS  admin can add a category
+  PASS  contact message reached the admin inbox  -> Admin Panel — System Administrator Contact Messages (1) Testing the contact form
+  PASS  admin report renders
+  PASS  admin report shows users by role
+
+I. EDITING A JOB (supervisor issue 3)
+  PASS  the new job is listed
+  PASS  the edit form opens with the job loaded
+  PASS  fields are filled from the existing posting  -> Editable UI Job
+  PASS  the wage is carried over  -> 1800
+  PASS  saving returns to My Jobs with the change applied
+  PASS  the new wage is shown  -> ['Edited UI Job\tCleaning\tColombo\tRs. 2,100\t0\topen\t']
+  PASS  cancelling an edit discards the change
+
+J. WORKER TIMESHEETS AND APPROVAL (optional improvement)
+  PASS  the worker is offered a way to record their work
+  PASS  submitted work waits for the employer  -> ['Test Mason — 2 day(s)']
+  PASS  approving clears it from the queue
+
+K. PART-PAYMENT CONFIRMATION (supervisor issue 2)
+  PASS  payment uses the approved day only  -> ['Edited UI Job · 2 day(s) at Rs. 2,100']
+  PASS  the worker is asked to confirm the part payment
+  PASS  the confirmed amount is stated, not just 'confirmed'  -> ['You confirmed receiving Rs. 2,000 so far.', 'You confirmed receiving this.']
+  PASS  the employer can see what the worker has confirmed  -> ['Rs. 2,000 paid · Rs. 2,200 outstanding · confirmed by the worker', 'Paid 11/12
+  PASS  paying the balance asks the worker to confirm again  -> ['You confirmed Rs. 2,000. A further Rs. 2,200 has since been recorded — please 
+  PASS  the button names the amount still to confirm  -> Confirm Rs. 2,200 More
+  PASS  confirming the balance completes the record
+
+L. ORGANIZATION PROJECTS (supervisor issue 4)
+  PASS  an organization account reaches its dashboard
+  PASS  organizations get a Projects section
+  PASS  the projects panel renders
+  PASS  the project is created
+  PASS  recruitment progress starts at zero  -> ['Hired', 'Hired 0 of 4']
+  PASS  still-needed is shown
+  PASS  the posting form offers the project
+  PASS  the posting is grouped under the project  -> ['Kandy · 1 posting(s) · 0 applicant(s)']
+  PASS  the project's postings can be expanded
+  PASS  hiring moves the project's recruitment progress  -> ['Hired', 'Hired 1 of 4']
+  PASS  the remaining need is recalculated
+  PASS  an ordinary employer has no Projects section
+
+H. RESPONSIVE LAYOUT
+  PASS  home fits a phone screen  -> overflow=0px
+  PASS  job search fits a phone screen  -> overflow=0px
+  PASS  home fits a tablet screen  -> overflow=0px
+
+  404s  : none
+  errors: none (only expected rejections)
+
+RESULT: ALL UI CHECKS PASSED

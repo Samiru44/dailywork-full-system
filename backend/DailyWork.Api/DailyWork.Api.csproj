@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DailyWork.Api</RootNamespace>
+
+    <!--
+      Do not generate DailyWork.Api.exe.
+
+      By default the .NET SDK produces a small unsigned launcher .exe ("apphost")
+      next to the compiled DLL. Windows Application Control - Smart App Control
+      on Windows 11, or an AppLocker/WDAC policy on a managed machine - blocks
+      unsigned executables, which shows up as:
+
+          Unable to start program '...\bin\Debug\net8.0\DailyWork.Api.exe'.
+          An Application Control policy has blocked this file.
+
+      With UseAppHost set to false no .exe is produced, and the application is
+      started by dotnet.exe instead. dotnet.exe is signed by Microsoft and is
+      already trusted, so the policy allows it. Everything else is unchanged:
+      F5 in Visual Studio, "dotnet run", and START-DAILYWORK.bat all work the
+      same way, and the application behaves identically.
+    -->
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+  </ItemGroup>
+
+</Project>

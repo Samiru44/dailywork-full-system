@@ -1,0 +1,178 @@
+==========================================================================
+DAILYWORK — END-TO-END TEST AGAINST THE REAL ASP.NET CORE BACKEND
+==========================================================================
+  Target : http://localhost:5000/api
+  Run tag: 1112134732   (everything created by this run is tagged with it)
+==========================================================================
+
+1. THE SERVER IS RUNNING AND SERVING REAL DATA
+  PASS  the API responds  ->  200
+  PASS  homepage statistics come from the database  ->  workers=3 demo=True
+
+2. REGISTRATION
+  PASS  a worker can register
+  PASS  an employer can register
+  PASS  an organization can register
+  PASS  a weak password is refused  ->  Password must be at least 8 characters long.
+  PASS  logging in returns a token
+  PASS  a wrong password is refused
+
+3. WORKER PROFILE
+  PASS  the worker can save skills, district and experience  ->  {"message":"Profile updated."}
+
+  PASS  the extended profile is stored  ->  years=8 skills=Masonry, Construction
+
+4. JOB POSTING
+  PASS  the employer can post a job  ->  {"id":14,"message":"Job posted."}
+
+  PASS  the job is retrievable
+  PASS  an invalid job is refused  ->  Please enter a job title of at least 3 characters.
+  PASS  a worker cannot post a job
+
+5. JOB RECOMMENDATIONS
+  PASS  the worker gets recommendations  ->  200
+  PASS  the profile is complete enough to be matched on
+  PASS  the newly posted job is recommended to a matching worker  ->  9 recommendation(s) returned
+  PASS  the recommendation carries a match score  ->  91
+  PASS  the recommendation explains itself  ->  ['You have all the skills asked for (Masonry, Construction)', 'You work in Construction']
+  PASS  an employer cannot ask for worker recommendations
+
+6. SEARCH AND FILTERING
+  PASS  keyword search finds the job  ->  1
+  PASS  a wage filter excludes cheaper jobs
+  PASS  district and category filters work
+
+7. APPLYING
+  PASS  the worker can apply  ->  {"message":"Application submitted."}
+
+  PASS  applying twice is refused  ->  You have already applied for this job.
+  PASS  an employer cannot apply for a job
+  PASS  the applicant reaches the employer  ->  1
+
+8. HIRING
+  PASS  the application starts as pending  ->  pending
+  PASS  pending cannot jump straight to completed  ->  A worker must be hired before their work can be verified as completed.
+  PASS  the employer can shortlist  ->  {"from":"pending","message":"Status updated.","to":"shortlis
+  PASS  a shortlisted applicant can then be hired  ->  {"from":"shortlisted","message":"Status updated.","to":"acce
+  PASS  a worker cannot change their own application status
+
+9. WORK RECORDS
+  PASS  the employer can record a work day  ->  {"message":"Work recorded.","status":"approved"}
+
+  PASS  the same date cannot be recorded twice  ->  Work has already been recorded for that date.
+  PASS  the worker can submit their own day  ->  {"message":"Submitted. The employer will review it and add it to your 
+  PASS  a worker's day is pending, not approved  ->  pending
+  PASS  pending work is kept out of the earnings total  ->  totalEarned=4800.0 pending=1.0
+  PASS  the pending day is visible to the employer  ->  [2]
+  PASS  a worker cannot approve their own day  ->  403
+  PASS  the employer can approve it  ->  {"amount":null,"message":"Work approved.","status":"approved"}
+
+  PASS  approved work is added to the total  ->  7200.0
+
+10. COMPLETION AND PAYMENT CALCULATION
+  PASS  the employer can verify the work as done  ->  {"from":"accepted","message":"Status updated.","to":"complet
+  PASS  a payment is raised automatically  ->  1
+  PASS  the amount is calculated from the work records, not typed in  ->  expected 7200 (3 days x 2400), got 7200.0
+  PASS  the rate and units are recorded  ->  2400.0 x 3.0
+  PASS  a completed job cannot be reopened  ->  Completed work cannot be changed.
+  PASS  work added after completion recalculates the payment  ->  expected 9600, got 9600.0
+
+11. PAYMENT, PART PAYMENT AND CONFIRMATION
+  PASS  the employer can record a part payment  ->  {"amountPaid":3200.0,"awaitingConfirmation":3200.0,"message":"Part pay
+  PASS  the outstanding balance is reported  ->  outstanding=6400.0
+  PASS  paying more than is owed is refused  ->  That is more than the outstanding balance of 6400.00.
+  PASS  an unrelated worker cannot record a payment
+  PASS  the worker can confirm the part payment  ->  {"confirmedAmount":3200.0,"fullyConfirmed":false,"message":"Thank you.
+  PASS  the confirmation records an amount, not just a flag  ->  3200.0
+  PASS  a part payment is not reported as fully confirmed
+  PASS  confirming twice with no new money is refused  ->  You have already confirmed everything recorded as paid so far. Rs. 6,4
+  PASS  the employer can settle the balance  ->  {"amountPaid":9600.0,"awaitingConfirmation":6400.0,"message":"Payment 
+  PASS  paying the balance resets the worker's confirmation
+  PASS  the newly unconfirmed amount is reported  ->  6400.0
+  PASS  a settled payment cannot be reopened  ->  This payment has already been settled in full and cannot be 
+  PASS  the worker confirms the balance  ->  {"confirmedAmount":9600.0,"fullyConfirmed":true,"message":"Thank you, 
+  PASS  the payment is now fully confirmed  ->  {'confirmedAmount': 9600.0, 'fullyConfirmed': True, 'message': 'Thank you, the full payment has
+  PASS  the worker sees the settled payment  ->  paid
+  PASS  the payment has a full audit trail  ->  200
+
+12. RATINGS
+  PASS  the employer can review the worker after completion  ->  {"message":"Thank you, your review has been saved."}
+
+  PASS  the same job cannot be reviewed twice  ->  You have already reviewed this job.
+  PASS  the worker can review the employer back  ->  {"message":"Thank you, your review has been saved."}
+
+  PASS  someone who never worked the job cannot review it  ->  You can only review someone after you have completed their job.
+  PASS  an employer cannot review a worker who never worked for them  ->  You can only review a worker who completed this job for you.
+
+13. NOTIFICATIONS
+  PASS  the worker was notified of being shortlisted
+  PASS  the worker was notified of being hired
+  PASS  the worker was notified that the work was verified
+  PASS  the worker was notified about the payment
+  PASS  the worker was notified about the review
+  PASS  an unread count is available
+
+14. REPORTS
+  PASS  the worker report is produced  ->  200
+  PASS  the worker report shows real earnings  ->  9600.0
+  PASS  the worker report counts completed jobs  ->  1
+  PASS  the employer report is produced  ->  200
+  PASS  the employer report shows real spending  ->  9600.0
+  PASS  the worker CSV export works  ->  Job,Employer,Rate,Unit,UnitsWorked,AmountDue,AmountPaid,Outs
+  PASS  a worker cannot read the admin report
+
+15. ORGANIZATION VERIFICATION AND PROJECTS
+  PASS  an organization can save its registration details  ->  {"message":"Organization details saved.","verificationStatus":"unverif
+  PASS  an ordinary employer cannot request organization verification  ->  400
+  PASS  an organization can request verification  ->  {"message":"Your verification request has been submitted for review.",
+  PASS  a second request while one is pending is refused  ->  Your request is already waiting for review.
+  PASS  the request is recorded as pending  ->  pending
+  PASS  an organization can create a project  ->  {"id":1,"message":"Project created."}
+
+  PASS  an ordinary employer has no access to projects
+  PASS  a job can be posted under the project  ->  {"id":15,"message":"Job posted."}
+
+  PASS  the project reports its recruitment position
+  PASS  postings are grouped under the project  ->  1
+  PASS  positions are counted from the real postings  ->  2
+  PASS  the shortfall is calculated  ->  4
+
+16. JOB EDITING
+  PASS  the employer can edit their own job  ->  {"message":"Job updated."}
+
+  PASS  the edit is saved  ->  E2E Editable 1112134732 (edited) / 2200.0
+  PASS  a worker cannot edit someone else's job
+
+17. ADMIN FUNCTIONS
+  PASS  the administrator can sign in
+  PASS  the admin can list users
+  PASS  a worker cannot list users
+  PASS  the verification queue is readable  ->  200
+  PASS  the organization's request is in the queue  ->  2 request(s) waiting
+  PASS  rejecting without a reason is refused  ->  Please give a reason when rejecting a request.
+  PASS  the admin can approve verification  ->  {"message":"Organization verified."}
+
+  PASS  the organization is now verified  ->  verified
+  PASS  the admin can add a job category  ->  {"id":9,"message":"Category added."}
+
+  PASS  a worker cannot add a category
+  PASS  the public contact form accepts a message  ->  {"message":"Thank you. Your message has been received and our team wil
+  PASS  the message reaches the admin inbox  ->  1 message(s) in the inbox
+  PASS  the admin report is produced  ->  200
+  PASS  deleting a user deactivates them instead of destroying records  ->  {"action":"deleted","message":"User deleted."}
+
+  PASS  the deactivated account can no longer sign in  ->  401
+  PASS  payment history survives a deactivation
+
+==========================================================================
+RESULT: 112 passed, 0 failed, 0 skipped
+==========================================================================
+Target : http://localhost:5000/api
+Run tag: 1112134732
+This run created accounts, jobs and a project tagged with the run tag above.
+Nothing was deleted. You can run this script again at any time.
+
+The complete process ran against the real backend:
+  registration -> job posting -> recommendation -> application -> hiring
+  -> work records -> completion -> payment -> worker confirmation -> ratings
+  plus admin functions, organization approval, projects, notifications and reports.

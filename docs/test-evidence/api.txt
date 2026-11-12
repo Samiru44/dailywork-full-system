@@ -1,0 +1,362 @@
+========================================================================
+DAILYWORK API TEST SUITE
+========================================================================
+
+1. USER REGISTRATION AND LOGIN
+  PASS   [1] worker can register  -> {"email":"tw@test.lk","id":19,"name":"Test Worker","role":"worker","token":"eyJpZCI6IDE5LC
+  PASS   [1] duplicate email rejected  -> An account with this email already exists.
+  PASS   [1] short name rejected  -> Please enter your full name.
+  PASS   [1] short password rejected  -> Password must be at least 8 characters long.
+  PASS   [1] password without a number rejected  -> Password must contain at least one number.
+  PASS   [1] common password rejected  -> Password must contain at least one number.
+  PASS   [1] invalid phone rejected  -> Please enter a valid phone number.
+  PASS   [1] wrong password rejected  -> Invalid email or password.
+  PASS   [1] unknown account gives the same message (no account enumeration)
+
+2. ROLE-BASED AUTHORIZATION
+  PASS   [2] admin cannot be self-registered  -> Admin accounts cannot be self-registered.
+  PASS   [2] seeded admin can log in
+  PASS   [2] seeded employer can log in
+  PASS   [2] worker blocked from admin API  -> 403
+  PASS   [2] anonymous blocked from admin API  -> 403
+  PASS   [2] worker blocked from employer API  -> 403
+  PASS   [2] admin allowed on admin API
+
+3+4. JOB APPLICATIONS AND DUPLICATES
+  PASS   [3] worker can apply  -> Application submitted.
+  PASS   [4] duplicate application rejected  -> You have already applied for this job.
+  PASS   [3] employer cannot apply for a job (role enforced)  -> 403
+  PASS   [3] admin cannot submit a worker application  -> 403
+  PASS   [3] applying to a missing job rejected  -> Job not found.
+  PASS   [3] anonymous cannot apply  -> 401
+
+5. JOB POSTING AND EDITING
+  PASS   [5] employer can post a job  -> {"id":15,"message":"Job posted."}
+
+  PASS   [5] short title rejected  -> Please enter a job title of at least 3 characters.
+  PASS   [5] zero wage rejected  -> Please enter the wage amount.
+  PASS   [5] absurd wage rejected  -> That wage looks too high. Please check the amount.
+  PASS   [5] worker cannot post a job  -> 403
+  PASS   [5] employer can edit their own job  -> Job updated.
+  PASS   [5] employer cannot edit another employer's job  -> 403
+
+6+7. HIRING, REJECTION AND WORK COMPLETION RULES
+  PASS   [6] applicant visible to the employer with their skills
+  PASS   [7] cannot complete work that was never hired  -> A worker must be hired before their work can be verified as completed.
+  PASS   [6] employer can shortlist  -> Status updated.
+  PASS   [7] cannot move backwards to pending  -> An application cannot move from shortlisted to pending.
+  PASS   [6] employer can hire
+  PASS   [7] re-hiring the same application rejected  -> This application is already accepted.
+  PASS   [6] another employer cannot decide on this application  -> 403
+  PASS   [7] invalid status rejected  -> Invalid status.
+  PASS   [12] employer can record a day of work  -> Work recorded.
+  PASS   [12] duplicate work record for the same date rejected  -> Work has already been recorded for that date.
+  PASS   [12] absurd unit count rejected  -> Units worked must be between 0 and 24.
+  PASS   [12] work log totals calculated  -> units=3.0 earned=7800.0
+  PASS   [7] employer can verify completed work
+  PASS   [7] completed work cannot be reopened  -> Completed work cannot be changed.
+
+8+9. PAYMENT CREATION AND DUPLICATE PROTECTION
+  PASS   [8] payment raised automatically on completion
+  PASS   [8] payment total = rate x units worked  -> rate=2600.0 units=3.0 amount=7800.0
+  PASS   [8] payment starts unpaid
+  PASS   [8] part payment accepted  -> Part payment recorded.
+  PASS   [8] part payment leaves a balance  -> 4800.0
+  PASS   [8] status becomes partial
+  PASS   [8] overpayment rejected  -> That is more than the outstanding balance of 4800.00.
+  PASS   [8] negative payment rejected  -> The payment amount must be greater than zero.
+  PASS   [8] another employer cannot pay this record  -> 403
+  PASS   [8] final payment settles the record  -> {"amountPaid":7800.0,"awaitingConfirmation":7800.0,"message":"Payment recorded i
+  PASS   [9] a settled payment cannot be paid again  -> This payment has already been settled in full and cannot be changed.
+  PASS   [9] original paid timestamp preserved  -> 2026-11-12T08:07:20.735575Z vs 2026-11-12T08:07:20.735575Z
+  PASS   [9] audit trail records every change  -> 3 entries
+  PASS   [9] audit trail records who acted
+  PASS   [8] worker can confirm receiving payment  -> Thank you, the full payment has been confirmed.
+  PASS   [8] double confirmation rejected  -> You have already confirmed everything recorded as paid so far.
+  PASS   [8] employer cannot confirm on the worker's behalf  -> 403
+
+10+11. RATINGS AND RATING AUTHORIZATION
+  PASS   [10] employer can review the worker who completed the job  -> Thank you, your review has been saved.
+  PASS   [10] duplicate review rejected  -> You have already reviewed this job.
+  PASS   [10] worker can review the employer who hired them  -> Thank you, your review has been saved.
+  PASS   [11] cannot review an unrelated person (arbitrary subject id blocked)  -> You can only review the employer who hired you for this job.
+  PASS   [11] review of a non-existent user rejected  -> The person you are reviewing was not found.
+  PASS   [11] self-review rejected  -> You cannot rate yourself.
+  PASS   [11] star rating outside 1-5 rejected  -> Please give a rating between 1 and 5 stars.
+  PASS   [11] stranger cannot review a job they were not on  -> You can only review someone after you have completed their job.
+  PASS   [11] review before completion rejected  -> You can only review someone after you have completed their job.
+  PASS   [10] review appears on the worker's profile
+
+12. NOTIFICATIONS
+  PASS   [12] worker notified when hired  -> ['New review received', 'Payment recorded in full', 'Part payment recorded', 'Work verifie
+  PASS   [12] worker notified when work verified
+  PASS   [12] worker notified about payment  -> ['New review received', 'Payment recorded in full', 'Part payment recorded', 'Work verifie
+  PASS   [12] worker notified about the review
+  PASS   [12] unread count reported  -> 7
+  PASS   [12] mark all as read works
+  PASS   [12] employer notified of a new applicant  -> ['New review received', 'Payment confirmed by worker', 'New applicant', 'New applicant']
+
+13. WORKER PROFILES
+  PASS   [13] worker can save an extended profile  -> Profile updated.
+  PASS   [13] profile stores experience
+  PASS   [13] profile stores certifications
+  PASS   [13] profile shows completed jobs  -> 1
+  PASS   [13] profile shows total earned  -> 7800.0
+  PASS   [13] profile shows work history
+  PASS   [13] profile shows the rating earned
+  PASS   [13] invalid profile name rejected  -> Please enter your full name.
+  PASS   [13] absurd experience rejected  -> Years of experience must be between 0 and 60.
+
+14. JOB RECOMMENDATIONS
+  PASS   [14] recommendations returned for a worker with a profile  -> 9
+  PASS   [14] every recommendation carries a match score
+  PASS   [14] every recommendation explains itself
+  PASS   [14] recommendations are sorted best first
+  PASS   [14] masonry worker is matched to construction work  -> Site Supervisor Support (65%) ['Matches your skills: Masonry', 'In your area (Colombo)']
+  PASS   [14] already-applied jobs are excluded
+  PASS   [14] location is used in the reasoning
+  PASS   [14] worker with an empty profile is told to complete it  -> Add your skills and district to your profile to get job recommendations that suit you.
+  PASS   [14] an employer cannot ask for job recommendations  -> 403
+  PASS   [14] an administrator cannot ask for job recommendations
+
+15. ORGANIZATION VERIFICATION
+  PASS   [15] new organization starts unverified
+  PASS   [15] organization record created
+  PASS   [15] verification needs a registration number first  -> A business or organization registration number is required.
+  PASS   [15] organization can request verification  -> Your verification request has been submitted for review.
+  PASS   [15] duplicate request rejected  -> Your request is already waiting for review.
+  PASS   [15] request appears in the admin queue  -> ['Lanka Agro Services', 'New Org Ltd']
+  PASS   [15] non-admin cannot see the verification queue  -> 403
+  PASS   [15] rejection requires a proper reason  -> Please give a reason when rejecting a request.
+  PASS   [15] admin can approve verification  -> Organization verified.
+  PASS   [15] organization is now verified
+  PASS   [15] verified badge appears only for verified employers  -> 2
+  PASS   [15] unverified employers do NOT get a badge  -> 14
+  PASS   [15] changing registered details sends the account back for review  -> Details saved. Because the registered details changed, your account is awaiting review aga
+
+16. SEARCH AND FILTERING
+  PASS   [16] keyword search works  -> 4
+  PASS   [16] category filter works  -> 2
+  PASS   [16] location filter works
+  PASS   [16] minimum wage filter works  -> 7
+  PASS   [16] maximum wage filter works  -> 3
+  PASS   [16] wage range filter works  -> 5
+  PASS   [16] inverted wage range rejected  -> The minimum wage cannot be higher than the maximum.
+  PASS   [16] negative wage rejected  -> Minimum wage cannot be negative.
+  PASS   [16] skills filter works  -> 3
+  PASS   [16] urgent filter works  -> 3
+  PASS   [16] sort by highest wage works
+  PASS   [16] sort by lowest wage works
+  PASS   [16] pagination works  -> page1=5 pages=4
+  PASS   [16] fully-staffed jobs can be hidden  -> 16
+
+17. ADMINISTRATOR FUNCTIONALITY
+  PASS   [17] admin stats come from real records
+  PASS   [17] admin stats count pending verifications
+  PASS   [17] admin can add a job category  -> Category added.
+  PASS   [17] duplicate category rejected  -> That category already exists.
+  PASS   [17] non-admin cannot add a category  -> 403
+  PASS   [17] admin can rename a category
+  PASS   [17] unused category can be deleted  -> {'action': 'deleted', 'message': 'Category deleted.'}
+  PASS   [17] category list is served to the website  -> 8
+  PASS   [17] admin can send an announcement  -> Announcement sent to 6 user(s).
+  PASS   [19] token works before the role change
+  PASS   [19] old token stops working after a role change  -> 401
+
+18. DATABASE INTEGRITY — deletion must not destroy records
+  PASS   [18] user with payment history is deactivated, not deleted  -> This account holds payment or review history, so it was deactivated instead of deleted. Th
+  PASS   [18] their reviews survive deactivation
+  PASS   [18] their payment records survive deactivation
+  PASS   [18] a deactivated user cannot log in
+  PASS   [18] a deactivated user's token stops working
+  PASS   [18] admin can reactivate an account  -> Account reactivated.
+  PASS   [18] user with no history is deleted outright
+  PASS   [18] job with completed work is closed, not deleted  -> This job has completed work and payment records attached, so it was closed instead of dele
+  PASS   [18] admin cannot delete their own account  -> You cannot remove your own account.
+
+19. SECURITY AND PRIVACY
+  PASS   [19] public profile hides the email
+  PASS   [19] public profile hides the phone
+  PASS   [19] public profile hides earnings
+  PASS   [19] public profile still shows skills and rating
+  PASS   [19] payments require authentication  -> 401
+  PASS   [19] audit trail hidden from unrelated users  -> 403
+  PASS   [19] repeated failed logins are throttled  -> 429
+
+20. INVALID REQUESTS AND ERROR HANDLING
+  PASS   [20] missing job returns 404 with a message  -> {"message":"Job not found."}
+
+  PASS   [20] missing application returns 404
+  PASS   [20] missing payment returns 404
+  PASS   [20] contact form validates its input  -> Please enter your name.
+  PASS   [20] valid contact message is accepted  -> Thank you. Your message has been received and our team will reply by email.
+  PASS   [20] contact message is actually stored  -> 1
+  PASS   [20] honeypot submission is silently discarded
+
+21. REPORTS
+  PASS   [21] worker report built from real records  -> completed=1 earned=7800.0
+  PASS   [21] worker report groups earnings by month
+  PASS   [21] worker report calculates a success rate  -> 50.0
+  PASS   [21] employer report built from real records  -> posted=2 spent=7800.0
+  PASS   [21] employer report calculates a fill rate
+  PASS   [21] admin report built from real records
+  PASS   [21] admin report breaks users down by role
+  PASS   [21] admin report tracks verification states
+  PASS   [21] non-admin cannot read the admin report  -> 403
+  PASS   [21] worker CSV export works  -> Job,Employer,Rate,Unit,UnitsWorked,AmountDue,AmountPaid,Outs
+  PASS   [21] admin CSV export works
+
+22. HOMEPAGE STATISTICS ARE HONEST
+  PASS   [22] no inflated minimum values  -> workers=5 jobs=16
+  PASS   [22] statistics report whether this is demo data
+  PASS   [22] real user count is tracked separately  -> 5
+
+23. WORK RECORDS AFTER COMPLETION (supervisor issue 1)
+  PASS   [23] payment raised from the 2 days recorded  -> 2000.0
+  PASS   [23] extra work accepted while nothing is paid  -> {"amount":3000.0,"message":"Work recorded, and the payment was updated to 3000.00.","statu
+  PASS   [23] payment recalculated after completion  -> expected 3000, got 3000.0
+  PASS   [23] units updated to match the work  -> 3.0
+  PASS   [23] recalculation is written to the audit trail  -> ['created', 'recalculated']
+  PASS   [23] work is refused once payment has started  -> Payment for this job has already started, so the work record cannot be changed. 
+  PASS   [23] the amount did not change after the refusal  -> 3000.0
+
+24. WORKER-SUBMITTED WORK NEEDS APPROVAL (optional improvement)
+  PASS   [24] a worker can submit a day they worked  -> {"message":"Submitted. The employer will review it and add it to your payment on
+  PASS   [24] the submitted day is pending, not approved  -> pending
+  PASS   [24] pending work is reported separately  -> 1
+  PASS   [24] pending work does not count towards earnings
+  PASS   [24] a worker cannot approve their own work  -> 403
+  PASS   [24] the employer can approve it  -> {"amount":null,"message":"Work approved.","status":"approved"}
+
+  PASS   [24] approved work now counts  -> 2000.0
+  PASS   [24] payment uses only approved work  -> 2000.0
+  PASS   [24] a rejected day is excluded from the payment  -> expected 1000, got 1000.0
+
+25. PART-PAYMENT CONFIRMATION (supervisor issue 2)
+  PASS   [25] payment of 10,000 raised  -> 10000.0
+  PASS   [25] worker can confirm a part payment  -> {"confirmedAmount":4000.0,"fullyConfirmed":false,"message":"Thank you. You have 
+  PASS   [25] the confirmation records the amount, not just a flag  -> 4000.0
+  PASS   [25] a part payment is not reported as fully confirmed
+  PASS   [25] confirming twice with no new money is refused  -> You have already confirmed everything recorded as paid so far. Rs. 6,0
+  PASS   [25] paying the balance resets the worker's confirmation
+  PASS   [25] the unconfirmed amount is reported  -> 6000.0
+  PASS   [25] the worker sees it as unconfirmed again  -> confirmed=4000.0 flag=False
+  PASS   [25] the employer sees what is still unconfirmed  -> 6000.0
+  PASS   [25] the worker can confirm the rest  -> {"confirmedAmount":10000.0,"fullyConfirmed":true,"message":"Thank you,
+  PASS   [25] now it is fully confirmed  -> {'confirmedAmount': 10000.0, 'fullyConfirmed': True, 'message': 'Thank you, the full payme
+
+26. JOB EDITING (supervisor issue 3)
+  PASS   [26] an employer can edit their own job  -> {"message":"Job updated."}
+
+  PASS   [26] the edit is saved  -> Edited Job Title / 2200.0
+  PASS   [26] a worker cannot edit a job  -> 403
+  PASS   [26] the wage cannot be cut after hiring  -> The wage cannot be changed after a worker has been hired for this job.
+  PASS   [26] positions cannot drop below the number already hired  -> You have already hired 1 worker(s), so the number required cannot be l
+
+27. ORGANIZATION PROJECTS (supervisor issue 4)
+  PASS   [27] an ordinary employer has no access to projects  -> 403
+  PASS   [27] an organization can create a project  -> {"id":1,"message":"Project created."}
+
+  PASS   [27] a too-short project name is refused  -> Give the project a name of at least 3 characters.
+  PASS   [27] postings are grouped under the project  -> 2
+  PASS   [27] positions are counted from the real postings  -> 4
+  PASS   [27] nobody is hired yet  -> hired=0 needed=4
+  PASS   [27] recruitment progress follows real hiring  -> hired=1
+  PASS   [27] fill rate is calculated  -> 25.0
+  PASS   [27] committed cost is tracked  -> 10000.0
+  PASS   [27] paid and outstanding are tracked  -> paid=4000.0 out=6000.0
+  PASS   [27] budget usage is reported  -> 10.0
+  PASS   [27] projects are private to their organization
+  PASS   [27] another organization cannot edit the project  -> 403
+  PASS   [27] a job cannot be filed under another organization's project  -> 2
+  PASS   [27] a project can be removed  -> Project removed. 2 job posting(s) were kept and no longer belong to a 
+  PASS   [27] its job postings survive the deletion
+  PASS   [27] the payment history survives the deletion
+
+28. CV UPLOAD (JOB SEEKER PROFILE)
+  PASS   [28] a new worker has no CV
+  PASS   [28] a worker can upload a PDF CV  -> {"fileName":"Nimal CV.pdf","message":"Your CV has been uploaded.","sizeBytes":4032,"upload
+  PASS   [28] the upload reports the file name and size  -> {"fileName":"Nimal CV.pdf","message":"Your CV has been uploaded.","sizeBytes":4032,"upload
+  PASS   [28] the profile then shows the CV's details  -> {'hasCv': True, 'cvFileName': 'Nimal CV.pdf', 'cvSizeBytes': 4032}
+  PASS   [28] the worker can download their own CV unchanged  -> 200
+  PASS   [28] it is served as a PDF download, not opened in the page  -> attachment; filename="Nimal CV.pdf"
+  PASS   [28] uploading again replaces the earlier CV  -> {"fileName":"newer.pdf","message":"Your CV has been replaced.","sizeBytes":9033,"uploadedA
+  PASS   [28] a Word .docx CV is accepted
+  PASS   [28] a Word .doc CV is accepted
+  PASS   [28] the stored type comes from the server, not from what the browser claims  -> application/pdf
+  PASS   [28] a file type that is not a CV is refused  -> Please upload your CV as a PDF or Word document (.pdf, .doc or .docx).
+  PASS   [28] a text file is refused  -> Please upload your CV as a PDF or Word document (.pdf, .doc or .docx).
+  PASS   [28] a program renamed to .pdf is refused  -> That file does not look like a real PDF or Word document (.pdf, .doc or .docx). Please che
+  PASS   [28] a web page renamed to .pdf is refused  -> That file does not look like a real PDF or Word document (.pdf, .doc or .docx). Please che
+  PASS   [28] an empty file is refused  -> Please choose a file to upload.
+  PASS   [28] a request with no file is refused  -> Please choose a file to upload.
+  PASS   [28] a CV over 2 MB is refused  -> That file is too large. A CV can be up to 2 MB.
+  PASS   [28] a very large upload is refused before it is read  -> 413
+  PASS   [28] none of the refused uploads replaced the stored CV
+  PASS   [28] a folder path sent with the file name is dropped  -> my cv.pdf
+  PASS   [28] a file name cannot point outside with ../  -> passwd.pdf
+  PASS   [28] an employer cannot upload a CV
+  PASS   [28] nobody can upload without signing in
+  PASS   [28] the CV cannot be fetched without signing in
+  PASS   [28] an employer the worker has not applied to cannot download it
+  PASS   [28] another worker cannot download it
+  PASS   [28] a stranger's view of the profile does not even reveal that a CV exists
+  PASS   [28] after the worker applies, that employer can download the CV  -> 200
+  PASS   [28] a different employer still cannot
+  PASS   [28] an administrator can
+  PASS   [28] the applicants list marks who has a CV  -> (True, 'Nimal CV.pdf', False)
+  PASS   [28] an applicant with no CV gives a clear 404, not an error
+  PASS   [28] the employer's view of the applicant's profile shows the CV
+  PASS   [28] the worker can remove their CV  -> Your CV has been removed.
+  PASS   [28] once removed it can no longer be downloaded
+  PASS   [28] and the profile and applicants list no longer show one
+  PASS   [28] removing a CV that is not there is a clean 404
+
+29. EMAIL NOTIFICATIONS
+  PASS   [29] posting a job emails the employer a confirmation  -> ['Your job is live: Site Plumber']
+  PASS   [29] the confirmation states the wage exactly, cents included  -> Rs. 3,500.5 per day
+  PASS   [29] a worker whose skills and district match is emailed about the job  -> ['mailworker@test.lk']
+  PASS   [29] a worker it does not match is not emailed  -> ['mailworker@test.lk']
+  PASS   [29] the matched workers emailed are the ones alerted in the app  -> 1
+  PASS   [29] a job that fails validation sends no email
+  PASS   [29] applying emails the worker a confirmation  -> ['Application sent: Site Plumber']
+  PASS   [29] which tells them their CV went with it  -> Included with your application (Mail Worker CV.pdf)
+  PASS   [29] and emails the employer about the new applicant  -> ['New applicant for Site Plumber: Mail Worker']
+  PASS   [29] with the worker's CV attached, byte for byte  -> [{'contentType': 'application/pdf', 'fileName': 'Mail Worker CV.pdf', 'sha256': 'd0234e120
+  PASS   [29] the worker's own copy carries no attachment
+  PASS   [29] exactly two emails are sent for one application  -> 2
+  PASS   [29] a refused duplicate application sends no email
+  PASS   [29] an applicant without a CV produces an email with no attachment
+  PASS   [29] and the worker is told no CV was included
+  PASS   [29] being shortlisted emails the worker  -> ['You have been shortlisted: Site Plumber']
+  PASS   [29] the shortlist email does not give out the employer's contact details
+  PASS   [29] being accepted (hired) emails the worker  -> ['You have been hired: Site Plumber']
+  PASS   [29] the hired email gives the employer's phone and email so work can be arranged  -> {'Employer': 'Mail Employer', 'Employer email': 'mailemployer@test.lk', 'Employer phone': 
+  PASS   [29] a status change that is refused sends no email
+  PASS   [29] verifying the work emails the worker  -> ['Work verified: Site Plumber']
+  PASS   [29] declining an applicant emails them, and only them  -> [('second@test.lk', 'Update on your application: Yard Helper')]
+  PASS   [29] another employer cannot change the status, and no email goes out  -> 403
+
+30. REPORTS BY EMAIL
+  PASS   [30] a worker can email themselves their report  -> {"delivery":"outbox","message":"This server is not connected to a mail server yet, so your
+  PASS   [30] the answer says honestly what happened to it  -> This server is not connected to a mail server yet, so your report was saved in the server'
+  PASS   [30] it goes to the address on their own account, and nowhere else  -> ['mailworker@test.lk']
+  PASS   [30] the emailed figures are the same as the report on screen  -> {'Jobs applied for': '2', 'Jobs completed': '1', 'Success rate': '50%'}
+  PASS   [30] the wages owed match the payment raised when the work was verified  -> ('Rs. 3,500.5', 3500.5)
+  PASS   [30] the payment records are attached as a CSV file  -> [{'contentType': 'text/csv', 'fileName': 'dailywork-payments.csv', 'sha256': '233c09eae54b
+  PASS   [30] a second request straight away is held back  -> A report was sent a moment ago. Please wait 60 seconds before sending another.
+  PASS   [30] an employer can email themselves the hiring report  -> {"delivery":"outbox","message":"This server is not connected to a mail server yet, so your
+  PASS   [30] with the same figures as the report on screen  -> {'Jobs posted': '2', 'Total applicants': '3', 'Positions filled': '33.3%'}
+  PASS   [30] and the employer's payments CSV attached
+  PASS   [30] a worker cannot request the employer report
+  PASS   [30] an employer cannot request the platform report
+  PASS   [30] an unknown report name is refused
+  PASS   [30] nothing is sent without signing in
+  PASS   [30] none of those refused requests produced an email
+  PASS   [30] an administrator can email the platform report  -> {"delivery":"outbox","message":"This is a demonstration account without a real mailbox, so
+  PASS   [30] it attaches the jobs list but not the users list, which holds everyone's contact details  -> ['dailywork-jobs.csv']
+  PASS   [30] the administrator's demonstration address is never treated as a real mailbox  -> This is a demonstration account without a real mailbox, so your report was saved in the se
+
+========================================================================
+RESULT: 298 passed, 0 failed
+========================================================================

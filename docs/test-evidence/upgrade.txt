@@ -1,0 +1,32 @@
+parsed 45 column additions, 6 table additions
+
+legacy row counts: {'Users': 2, 'Jobs': 2, 'Applications': 1, 'Payments': 2, 'Ratings': 1, 'Notifications': 0} 
+
+=== FIRST UPGRADE (legacy database) ===
+  49 change(s) applied
+
+  PASS  no rows lost  -> {'Users': 2, 'Jobs': 2, 'Applications': 1, 'Payments': 2, 'Ratings': 1, 'Notifications': 0} -> {'Users': 2, 'Jobs': 2, 'Applications': 1, 'Payments': 2, 'Ratings': 1, 'Notifications': 0}
+  PASS  all 45 new columns added
+  PASS  all new tables created  -> []
+  PASS  whole-rupee wage converted exactly  -> Pay=320000.0 (expected 320000)
+  PASS  fractional wage converted exactly  -> Pay=153745.0 (expected 153745)
+  PASS  paid payment amount converted  -> Amount=320000.0
+  PASS  AgreedRate back-filled  -> AgreedRate=320000
+  PASS  AmountPaid back-filled for settled payment  -> AmountPaid=320000
+  PASS  pending payment keeps AmountPaid at zero  -> AmountPaid=0
+  PASS  pending payment amount converted  -> Amount=153745.0
+  PASS  existing user data intact
+  PASS  existing rating intact
+  PASS  new columns defaulted sensibly
+
+=== SECOND UPGRADE (idempotency — the dangerous case) ===
+  PASS  second run applies no changes  -> 0 change(s)
+  PASS  money NOT multiplied a second time  -> Pay=320000.0
+  PASS  still no rows lost
+
+=== FRESH DATABASE PATH ===
+  PASS  fresh database is never rescaled  -> Pay=250000
+  PASS  marker recorded on fresh install
+  PASS  restart after fresh install leaves money alone  -> Pay=250000
+
+RESULT: ALL DATABASE UPGRADE CHECKS PASSED

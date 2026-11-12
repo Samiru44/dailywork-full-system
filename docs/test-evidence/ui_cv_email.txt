@@ -1,0 +1,96 @@
+
+M. PLANS / PRICING LINKS BY ROLE
+  PASS  a visitor who is not signed in sees Pricing in the menu  -> ['Home', 'About', 'Find Jobs', 'Features', 'Pricing', 'Contact Us']
+  PASS  and in the footer
+  PASS  a worker's dashboard has no Plans link  -> ['Overview', 'Recommended', 'My Applications', 'Payments', 'Reviews', 'Reports', 'Notifica
+  PASS  a worker's top menu has no Pricing link  -> ['Home', 'About', 'Find Jobs', 'Features', 'Contact Us']
+  PASS  the worker's other menu items are untouched  -> ['Overview', 'Recommended', 'My Applications', 'Payments', 'Reviews', 'Reports', 'Notifica
+  PASS  the footer hides Pricing from a signed-in worker
+  PASS  an employer's dashboard has the Plans link  -> ['Overview', 'Post a Job', 'My Jobs\n1', 'Applicants', 'Work Approvals', 'Payments', 'Revi
+  PASS  an employer's top menu has Pricing  -> ['Home', 'About', 'Find Jobs', 'Features', 'Pricing', 'Contact Us']
+  PASS  the employer's Plans link opens the plans page  -> #/pricing
+  PASS  an organization's dashboard has the Plans link  -> ['Overview', 'Post a Job', 'Projects', 'My Jobs', 'Applicants', 'Work Approvals', 'Payment
+  PASS  an administrator's dashboard has no Plans link  -> ['Overview', 'My Applications', 'Payments', 'Reviews', 'Reports', 'Notifications', 'My Pro
+  PASS  an administrator's top menu has no Pricing link  -> ['Home', 'About', 'Find Jobs', 'Features', 'Contact Us']
+  PASS  the administrator still has the Admin Panel link  -> ['Overview', 'My Applications', 'Payments', 'Reviews', 'Reports', 'Notifications', 'My Pro
+  PASS  signing out brings Pricing back for visitors  -> ['Home', 'About', 'Find Jobs', 'Features', 'Pricing', 'Contact Us']
+
+N. CV UPLOAD IN THE WORKER'S PROFILE
+  PASS  an employer's profile has no CV section
+  PASS  the worker's profile has a My CV section
+  PASS  it starts empty, with an Upload button  -> My CV
+
+Upload your CV as a PDF or Word document, up to 2 MB. When you apply for 
+  PASS  it says who will be able to see the CV
+  PASS  choosing a file that is not a PDF or Word document is refused on the spot  -> My CV
+Please choose a PDF or Word document (.pdf, .doc or .docx).
+
+Upload your CV as a PDF
+  PASS  choosing a file over 2 MB is refused on the spot
+  PASS  a program renamed to .pdf gets past the browser but is refused by the server  -> My CV
+That file does not look like a real PDF or Word document (.pdf, .doc or .docx). Plea
+  PASS  after three refusals there is still no CV on the profile
+  PASS  a real PDF uploads  -> My CV
+Your CV has been uploaded.
+
+Upload your CV as a PDF or Word document, up to 2 MB. Wh
+  PASS  the file's name and size are shown  -> ['6 KB · uploaded 11/12/2026']
+  PASS  Download, Replace and Remove are offered
+  PASS  unsaved profile edits are still in the form after the upload  -> Masonry, Tiling (not saved yet)
+  PASS  Download gives back exactly the file that was uploaded  -> Kamal Perera CV.pdf
+  PASS  the CV is still there after reloading the page
+  PASS  Replace opens the file picker and swaps the CV  -> My CV
+Your CV has been replaced.
+
+Upload your CV as a PDF or Word document, up to 2 MB. Wh
+  PASS  the new size is shown  -> ['147 KB · uploaded 11/12/2026']
+  PASS  the server holds the replacement
+
+O. APPLYING SHARES THE CV WITH THAT EMPLOYER
+  PASS  before applying, the employer cannot fetch the CV
+  PASS  the apply form tells the worker their CV goes with the application
+  PASS  the application is sent
+  PASS  applying through the site emails the worker a confirmation  -> ['Application sent: CV Screen Mason']
+  PASS  and emails the employer, with the CV attached  -> [('New applicant for CV Screen Mason: Kamal Perera', ['Kamal CV 2026.pdf']), ('New applica
+  PASS  the employer sees a CV button on the applicant who has one
+  PASS  and no CV button on the applicant who has none
+  PASS  the employer downloads the applicant's CV, unchanged  -> Kamal CV 2026.pdf
+
+P. EMAILS WHEN AN APPLICATION IS ACCEPTED AND WHEN A JOB IS POSTED
+  PASS  the employer hires the applicant
+  PASS  hiring emails the worker that they were accepted  -> [('ui-cv-worker@test.lk', 'You have been hired: CV Screen Mason')]
+  PASS  with the employer's contact details
+  PASS  declining emails that applicant  -> [('ui-cv-worker2@test.lk', 'Update on your application: CV Screen Mason')]
+  PASS  a job is posted through the form  -> Welcome, Ruwan Builders (employer)
+Post a New Job
+Job posted. It is now live for workers t
+  PASS  posting emails the employer a confirmation  -> [('worker@dailywork.lk', 'New job that matches your profile: Email Test Painter'), ('ui-cv
+  PASS  and emails the worker whose profile matches the new job  -> ['worker@dailywork.lk', 'ui-cv-worker2@test.lk']
+
+Q. EMAIL ME THIS REPORT
+  PASS  the employer's report has an Email me this report button
+  PASS  the CSV export button is still there
+  PASS  clicking it reports what happened  -> ["This server is not connected to a mail server yet, so your report was saved in the serve
+  PASS  the hiring report is emailed to the employer's own address, with the CSV  -> [('ui-cv-employer@test.lk', ['dailywork-employer-payments.csv'])]
+  PASS  a second click straight away is held back with a clear message  -> ['A report was sent a moment ago. Please wait 59 seconds before sending another.']
+  PASS  a worker can email themselves their work report  -> {'Currently hired': '1', 'Jobs applied for': '1', 'Jobs completed': '0', 'Not successful':
+  PASS  an administrator can email the platform report  -> [('report_admin', ['dailywork-jobs.csv'])]
+  PASS  and is told it was saved, not sent, because the admin address is a demonstration one  -> ["This is a demonstration account without a real mailbox, so your report was saved in the 
+
+R. REMOVING A CV
+  PASS  removing asks for confirmation first  -> ['Remove your CV? Employers you apply to from now on will not receive one.']
+  PASS  the CV is removed and the section goes back to empty  -> My CV
+Your CV has been removed.
+
+Upload your CV as a PDF or Word document, up to 2 MB. Whe
+  PASS  the employer can no longer download it
+  PASS  and the CV button is gone from the employer's applicants list
+
+S. PHONE-SIZED SCREEN
+  PASS  the CV section fits a phone screen  -> overflow=0px
+  PASS  the report buttons fit a phone screen  -> overflow=0px
+
+  404s  : none
+  errors: none (only expected rejections)
+
+RESULT: ALL CV, PLANS-MENU AND EMAIL UI CHECKS PASSED

@@ -1,0 +1,13 @@
+checking 42 C# files
+
+  PASS  all files have balanced delimiters
+  PASS  every DailyWork using resolves  -> set()
+  PASS  no controller sets a DTO property that does not exist
+  PASS  every injected service is registered  -> []
+  PASS  every DbSet maps to a model file  -> set()
+  PASS  configured properties exist on their models  -> []
+  PASS  controllers are well formed  -> []
+  PASS  no JWT secret committed in appsettings.json
+
+RESULT: ALL STRUCTURAL CHECKS PASSED
+NOTE: this is static analysis, not compilation. See TEST-RESULTS.md.
