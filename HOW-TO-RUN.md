@@ -5,10 +5,10 @@ address to open**. No separate frontend server, no npm, no CORS setup.
 
 ---
 
-## Step 1 — Install .NET 8 (one time only)
+## Step 1 — Install .NET 10 (one time only)
 
-Download the **.NET 8.0 SDK** (not the Runtime):
-**https://dotnet.microsoft.com/download/dotnet/8.0**
+Download the **.NET 10.0 SDK** (not the Runtime):
+**https://dotnet.microsoft.com/download/dotnet/10.0**
 
 Install with the default options, then **close and reopen** any Command Prompt or
 terminal window. Check it worked:
@@ -17,8 +17,7 @@ terminal window. Check it worked:
 dotnet --version
 ```
 
-You should see `8.0.xxx`. If you see `9.0.xxx` only, install the 8.0 SDK as well —
-both can be installed side by side.
+You should see `10.0.xxx`. If you have an older SDK, install the .NET 10 SDK; it can be installed side by side with older versions.
 
 > No database to install. The project uses SQLite, which is a single file created
 > automatically on first run.
@@ -244,7 +243,7 @@ set DW_ADMIN_PASSWORD=your-password
 ### "An Application Control policy has blocked this file"
 
 ```
-Unable to start program 'C:\...\bin\Debug\net8.0\DailyWork.Api.exe'.
+Unable to start program 'C:\...\bin\Debug\net10.0\DailyWork.Api.exe'.
 An Application Control policy has blocked this file.
 ```
 
@@ -274,7 +273,7 @@ If you are looking at an older copy, or it still happens:
    ```
    or run the compiled DLL directly:
    ```powershell
-   dotnet bin\Debug\net8.0\DailyWork.Api.dll
+   dotnet bin\Debug\net10.0\DailyWork.Api.dll
    ```
 3. **Unblock the extracted files.** Windows marks everything that came out of a
    downloaded ZIP as untrusted, which can trigger the same block. From the
@@ -304,8 +303,8 @@ your university or workplace manages:
 
 | Problem | What to do |
 |---|---|
-| `'dotnet' is not recognized` | The .NET 8 SDK is not installed, or the terminal was open before installing. Install it, then open a **new** terminal. |
-| `The framework 'Microsoft.NETCore.App', version '8.0.0' was not found` | You have a newer SDK but not the .NET 8 runtime. Install the .NET 8.0 SDK from the link in Step 1. |
+| `'dotnet' is not recognized` | The .NET 10 SDK is not installed, or the terminal was open before installing. Install it, then open a **new** terminal. |
+| `The framework 'Microsoft.NETCore.App', version '10.0.0' was not found` | The .NET 10 runtime is missing. Install the .NET 10.0 SDK from the link in Step 1. |
 | `Address already in use` / port 5000 busy | Another program is using port 5000. Close it, or change the port in **both** `Program.cs` (`UseUrls`) and nothing else — the website uses a relative `/api` path, so it follows automatically. |
 | Page loads but the job list is empty | The API is not responding. Look at the terminal window for a red error message. |
 | Package restore fails | You need an internet connection for the first `dotnet run` only. After that it works offline. |

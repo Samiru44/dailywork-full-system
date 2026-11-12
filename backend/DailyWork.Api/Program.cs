@@ -9,19 +9,53 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Always serve on port 5000 so the bundled website can find the API.
-builder.WebHost.UseUrls("http://localhost:5000");
+// Bind to the port assigned by the hosting platform. Locally, keep port 5000.
+var portValue = Environment.GetEnvironmentVariable("PORT");
+var port = int.TryParse(portValue, out var assignedPort) && assignedPort is > 0 and <= 65535
+    ? assignedPort
+    : 5000;
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // ---------- Database ----------
-// SQLite needs no installation. To move to SQL Server, add the
-// Microsoft.EntityFrameworkCore.SqlServer package, swap UseSqlite for
-// UseSqlServer below, and update the connection string in appsettings.json.
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+// SQLite remains the local-development default. Production can select PostgreSQL
+// with Database__Provider=PostgreSQL and ConnectionStrings__Default set to an
+// Npgsql connection string (Host=...;Database=...;Username=...;Password=...).
+var defaultDatabaseProvider = builder.Environment.IsProduction() ? "PostgreSQL" : "Sqlite";
+var databaseProvider = builder.Configuration["Database:Provider"] ?? defaultDatabaseProvider;
+var databaseConnection = builder.Configuration.GetConnectionString("Default");
+if (string.IsNullOrWhiteSpace(databaseConnection))
+    throw new InvalidOperationException("ConnectionStrings:Default must be configured.");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    if (databaseProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase) ||
+        databaseProvider.Equals("Postgres", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseNpgsql(databaseConnection);
+    }
+    else if (databaseProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase) ||
+             databaseProvider.Equals("SQLite", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlite(databaseConnection);
+    }
+    else
+    {
+        throw new InvalidOperationException(
+            $"Unsupported Database:Provider '{databaseProvider}'. Use Sqlite or PostgreSQL.");
+    }
+});
 
 // ---------- Authentication ----------
-// The signing key comes from the environment when one is set, so a real
-// deployment keeps its secret out of source control. See TokenService.JwtKey.
+// Never allow Production to fall back to an ephemeral local JWT key. On a
+// restart, such a fallback would invalidate every active user's session.
+var configuredJwtKey = builder.Configuration["DAILYWORK_JWT_KEY"] ??
+                       builder.Configuration["Jwt:Key"];
+if (builder.Environment.IsProduction() &&
+    (string.IsNullOrWhiteSpace(configuredJwtKey) || configuredJwtKey.Length < 32))
+{
+    throw new InvalidOperationException(
+        "Set DAILYWORK_JWT_KEY (at least 32 characters) in the hosting provider's environment settings.");
+}
 var jwtKey = TokenService.JwtKey(builder.Configuration);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -118,7 +152,25 @@ using (var scope = app.Services.CreateScope())
     // Creates the schema on a fresh install and adds anything missing to an
     // existing database, without touching the data already in it.
     DatabaseBootstrapper.EnsureUpToDate(db, logger);
-    DbSeeder.Seed(db);
+
+    // Demo users, jobs and the published demo password are only for local
+    // development. Production gets categories plus an optional administrator
+    // whose credentials are supplied through secure environment variables.
+    var seedDemoData = app.Environment.IsDevelopment() &&
+                       builder.Configuration.GetValue("DailyWork:SeedDemoData", true);
+    DbSeeder.Seed(
+        db,
+        includeDemoAccounts: seedDemoData,
+        adminName: builder.Configuration["DAILYWORK_ADMIN_NAME"],
+        adminEmail: builder.Configuration["DAILYWORK_ADMIN_EMAIL"],
+        adminPhone: builder.Configuration["DAILYWORK_ADMIN_PHONE"],
+        adminPassword: builder.Configuration["DAILYWORK_ADMIN_PASSWORD"]);
+
+    if (!seedDemoData && !db.Users.Any())
+    {
+        throw new InvalidOperationException(
+            "The production database has no administrator. Set DAILYWORK_ADMIN_EMAIL and DAILYWORK_ADMIN_PASSWORD (at least 12 characters) before first startup.");
+    }
 }
 
 // ---------- Error handling ----------
@@ -155,8 +207,9 @@ Console.WriteLine();
 Console.WriteLine("====================================================");
 Console.WriteLine("  DailyWork is running");
 Console.WriteLine();
-Console.WriteLine("  Website:  http://localhost:5000");
-Console.WriteLine("  API docs: http://localhost:5000/swagger");
+var baseUrl = app.Urls.FirstOrDefault()?.TrimEnd('/') ?? $"http://localhost:{port}";
+Console.WriteLine("  Website:  " + baseUrl);
+Console.WriteLine("  API docs: " + baseUrl + "/swagger");
 var emailQueue = app.Services.GetRequiredService<EmailQueue>();
 Console.WriteLine("  Email:     " + emailQueue.Describe());
 Console.WriteLine();

@@ -17,12 +17,17 @@ computer, showing your own data, are what the marker is looking for.
 
 ---
 
+> **Deployment update (12 November 2026):** The deployment-preparation branch targets
+> .NET 10 LTS and Entity Framework Core 10. Earlier project notes may refer to .NET 8;
+> .NET 8 reached end of support on 10 November 2026. The new GitHub Actions workflow
+> performs a .NET 10 restore/build on pushes to the deployment branch.
+
 ## 1. Test environment
 
 | Item | Value |
 |---|---|
-| Backend | ASP.NET Core 8 Web API (C#) |
-| Database | SQLite via Entity Framework Core 8 |
+| Backend | ASP.NET Core 10 Web API (C#) |
+| Database | SQLite via Entity Framework Core 10 (PostgreSQL supported for hosting) |
 | Frontend | React 18 served from the API's `wwwroot` |
 | Browser | *(record the browser and version you used)* |
 | Date of test run | *(record the date)* |

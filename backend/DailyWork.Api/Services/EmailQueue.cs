@@ -14,6 +14,12 @@ namespace DailyWork.Api.Services;
 /// </summary>
 public class SmtpSettings
 {
+    /// <summary>SMTP (local use) or BrevoApi (hosted services with SMTP port restrictions).</summary>
+    public string Provider { get; set; } = "Smtp";
+
+    /// <summary>Brevo transactional API key. Keep it in Smtp__ApiKey environment variable.</summary>
+    public string ApiKey { get; set; } = "";
+
     /// <summary>The mail server, e.g. smtp.gmail.com. Empty means "not configured".</summary>
     public string Host { get; set; } = "";
 
@@ -49,7 +55,10 @@ public enum EmailDelivery
     Outbox,
 
     /// <summary>A mail server is configured: emails are really sent.</summary>
-    Smtp
+    Smtp,
+
+    /// <summary>Brevo transactional email HTTPS API.</summary>
+    BrevoApi
 }
 
 public class EmailAttachment
@@ -136,23 +145,35 @@ public class EmailQueue
         // A host and From address alone are not enough for Gmail SMTP.
         // Require the authenticated account and its App Password as well;
         // otherwise the app would claim to send mail and fail asynchronously.
+        var brevoReady =
+            Settings.Provider.Equals("BrevoApi", StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(Settings.ApiKey) &&
+            FromAddress.Contains('@');
+
         var smtpReady =
+            Settings.Provider.Equals("Smtp", StringComparison.OrdinalIgnoreCase) &&
             !string.IsNullOrWhiteSpace(Settings.Host) &&
             Settings.Port is >= 1 and <= 65535 &&
             FromAddress.Contains('@') &&
             !string.IsNullOrWhiteSpace(Settings.Username) &&
             !string.IsNullOrWhiteSpace(Settings.Password);
 
-        if (smtpReady)
+        if (brevoReady)
+        {
+            mode = EmailDelivery.BrevoApi;
+        }
+        else if (smtpReady)
         {
             mode = EmailDelivery.Smtp;
         }
-        else if (!string.IsNullOrWhiteSpace(Settings.Host) ||
+        else if (!Settings.Provider.Equals("Smtp", StringComparison.OrdinalIgnoreCase) ||
+                 !string.IsNullOrWhiteSpace(Settings.Host) ||
                  !string.IsNullOrWhiteSpace(Settings.Username) ||
-                 !string.IsNullOrWhiteSpace(Settings.Password))
+                 !string.IsNullOrWhiteSpace(Settings.Password) ||
+                 !string.IsNullOrWhiteSpace(Settings.ApiKey))
         {
             _log.LogWarning(
-                "SMTP settings are incomplete. Real email is disabled. Configure Smtp:Host, Smtp:Port, Smtp:Username, Smtp:Password and Smtp:From. Current delivery will use the outbox when available.");
+                "Email provider settings are incomplete. Real email is disabled. For Brevo API set Smtp__Provider=BrevoApi, Smtp__ApiKey and Smtp__From; for SMTP configure Smtp__Host, Smtp__Port, Smtp__Username, Smtp__Password and Smtp__From. The outbox will be used when available.");
         }
 
         Mode = mode;
@@ -178,7 +199,7 @@ public class EmailQueue
     /// </summary>
     public EmailDelivery DeliveryFor(string? email)
     {
-        if (Mode == EmailDelivery.Smtp && IsDemoAddress(email))
+        if ((Mode == EmailDelivery.Smtp || Mode == EmailDelivery.BrevoApi) && IsDemoAddress(email))
             return OutboxPath.Length > 0 ? EmailDelivery.Outbox : EmailDelivery.Off;
 
         return Mode;
@@ -187,8 +208,9 @@ public class EmailQueue
     /// <summary>One line for the start-up banner, saying what will happen to emails.</summary>
     public string Describe() => Mode switch
     {
-        EmailDelivery.Smtp   => $"sending through {Settings.Host} as {FromAddress}",
-        EmailDelivery.Outbox => $"no mail server set - emails are saved in {OutboxPath}",
+        EmailDelivery.Smtp    => $"sending through {Settings.Host} as {FromAddress}",
+        EmailDelivery.BrevoApi => $"sending through Brevo API as {FromAddress}",
+        EmailDelivery.Outbox  => $"no mail server set - emails are saved in {OutboxPath}",
         _                    => "not configured - emails are only noted in this window"
     };
 

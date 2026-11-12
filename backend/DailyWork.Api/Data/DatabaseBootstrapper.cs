@@ -24,6 +24,21 @@ public static class DatabaseBootstrapper
 
     public static void EnsureUpToDate(AppDbContext db, ILogger logger)
     {
+        // The in-place upgrade code below intentionally targets SQLite only.
+        // On PostgreSQL (the hosted production provider), create the initial
+        // schema from the EF model. Future model changes must be delivered as
+        // EF Core migrations; EnsureCreated never alters an existing schema.
+        if (!db.Database.IsSqlite())
+        {
+            var createdPostgresSchema = db.Database.EnsureCreated();
+            if (createdPostgresSchema)
+                logger.LogInformation("PostgreSQL schema created from the current EF Core model.");
+            else
+                logger.LogInformation(
+                    "PostgreSQL database already contains tables. EnsureCreated does not apply updates; use EF Core migrations for future schema changes.");
+            return;
+        }
+
         // Creates the database and the full current schema when it does not
         // exist yet; returns false when the database was already present.
         var created = db.Database.EnsureCreated();

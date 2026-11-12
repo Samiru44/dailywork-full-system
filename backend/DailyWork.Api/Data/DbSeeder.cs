@@ -13,10 +13,44 @@ namespace DailyWork.Api.Data;
 /// </summary>
 public static class DbSeeder
 {
-    public static void Seed(AppDbContext db)
+    public static void Seed(
+        AppDbContext db,
+        bool includeDemoAccounts = true,
+        string? adminName = null,
+        string? adminEmail = null,
+        string? adminPhone = null,
+        string? adminPassword = null)
     {
         SeedCategories(db);
-        SeedUsersAndJobs(db);
+
+        if (includeDemoAccounts)
+        {
+            SeedUsersAndJobs(db);
+            return;
+        }
+
+        // Never create the documented demo administrator in production. A
+        // production admin is created only when the owner supplies a private
+        // email and password through environment variables on first startup.
+        if (db.Users.Any() || string.IsNullOrWhiteSpace(adminEmail) ||
+            string.IsNullOrWhiteSpace(adminPassword))
+            return;
+
+        if (adminPassword.Length < 12)
+            throw new InvalidOperationException(
+                "DAILYWORK_ADMIN_PASSWORD must contain at least 12 characters.");
+
+        db.Users.Add(new User
+        {
+            Name = string.IsNullOrWhiteSpace(adminName) ? "DailyWork Administrator" : adminName.Trim(),
+            Email = adminEmail.Trim(),
+            Phone = string.IsNullOrWhiteSpace(adminPhone) ? "" : adminPhone.Trim(),
+            Role = "admin",
+            District = "",
+            VerificationStatus = "verified",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword)
+        });
+        db.SaveChanges();
     }
 
     // =================================================================

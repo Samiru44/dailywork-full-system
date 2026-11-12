@@ -422,7 +422,7 @@ public class ReportsController : ControllerBase
 
         if (delivery == EmailDelivery.Off)
         {
-            if (EmailQueue.IsDemoAddress(user.Email) && _email.Mode == EmailDelivery.Smtp)
+            if (EmailQueue.IsDemoAddress(user.Email) && (_email.Mode == EmailDelivery.Smtp || _email.Mode == EmailDelivery.BrevoApi))
                 return BadRequest(new
                 {
                     message = "This is a demonstration account, and its email address (" + user.Email +
@@ -487,7 +487,7 @@ public class ReportsController : ControllerBase
 
         return Ok(new
         {
-            delivery = "smtp",
+            delivery = delivery == EmailDelivery.BrevoApi ? "brevo-api" : "smtp",
             message = "Your report is on its way to " + user.Email + "."
         });
     }

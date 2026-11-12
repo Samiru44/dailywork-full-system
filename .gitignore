@@ -32,3 +32,11 @@ jwt-key.local.txt
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Local archives and runtime output
+*.zip
+*.log
+*.tmp
+*.bak
+*.db-journal
+*.sqlite-journal

@@ -8,11 +8,12 @@ database, serving a React single-page website.
 | Tier | Technology |
 |---|---|
 | **Presentation** | React 18, HTML5, CSS3, JavaScript |
-| **Application** | C# / ASP.NET Core 8 Web API, JWT authentication, BCrypt password hashing |
-| **Data** | Entity Framework Core 8 over SQLite (one-line switch to SQL Server) |
+| **Application** | C# / ASP.NET Core 10 Web API, JWT authentication, BCrypt password hashing |
+| **Data** | Entity Framework Core 10 over SQLite locally / PostgreSQL in production |
 
 The website is served by the API itself from `wwwroot`, so the whole system runs
-as a single process on a single port.
+as a single process on a single port. Production deployment uses PostgreSQL; local
+development keeps SQLite as the default.
 
 ---
 
@@ -21,6 +22,7 @@ as a single process on a single port.
 | If you want to… | Read |
 |---|---|
 | Install and run it on Windows | **`HOW-TO-RUN.md`** |
+| Deploy the website with Render, Neon and Brevo | **`DEPLOY-RENDER-NEON.md`** |
 | Know what was fixed and which files changed | **`docs/CHANGELOG-AUDIT.md`** |
 | Set up CV upload, the Plans menu and **email** | **`docs/CV-EMAIL-PLANS.md`** |
 | Check a proposal requirement against the code | **`docs/FEATURE-CHECKLIST.md`** |

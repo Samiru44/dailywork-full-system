@@ -25,12 +25,12 @@ if errorlevel 1 (
     echo      Windows is blocking an unsigned program. Run this
     echo      instead, which starts the app through dotnet.exe:
     echo.
-    echo         dotnet bin\Debug\net8.0\DailyWork.Api.dll
+    echo         dotnet bin\Debug\net10.0\DailyWork.Api.dll
     echo.
     echo      See the Troubleshooting section of HOW-TO-RUN.md.
     echo.
     echo   "'dotnet' is not recognized"
-    echo      The .NET 8 SDK is not installed, or this window was
+    echo      The .NET 10 SDK is not installed, or this window was
     echo      opened before installing it. Install it, then open a
     echo      NEW terminal window.
     echo =============================================================

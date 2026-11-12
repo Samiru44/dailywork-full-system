@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 
 namespace DailyWork.Api.Services;
@@ -8,18 +10,22 @@ namespace DailyWork.Api.Services;
 /// <summary>
 /// Sends the emails waiting in EmailQueue, one at a time, in the background.
 ///
-/// Uses System.Net.Mail, which is part of .NET, so no extra package is needed.
-/// It speaks SMTP with STARTTLS (port 587), which is what Gmail, Outlook,
-/// Brevo, SendGrid and most other providers offer.
+/// Uses SMTP for local development or Brevo's HTTPS transactional email API
+/// for hosted services that block outbound SMTP ports.
 /// </summary>
 public class EmailDispatcher : BackgroundService
 {
     private readonly EmailQueue _queue;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<EmailDispatcher> _log;
 
-    public EmailDispatcher(EmailQueue queue, ILogger<EmailDispatcher> log)
+    public EmailDispatcher(
+        EmailQueue queue,
+        IHttpClientFactory httpClientFactory,
+        ILogger<EmailDispatcher> log)
     {
         _queue = queue;
+        _httpClientFactory = httpClientFactory;
         _log = log;
     }
 
@@ -42,7 +48,7 @@ public class EmailDispatcher : BackgroundService
                     // One bad address or a mail-server hiccup must not stop
                     // the emails behind it. Log it and move on.
                     _log.LogError(ex,
-                        "Email delivery failed for \"{Subject}\" to {To}. Check the SMTP host, port, TLS setting, Gmail App Password, and recipient address. SMTP credentials are intentionally not logged.",
+                        "Email delivery failed for \"{Subject}\" to {To}. Check the configured provider, sender verification, API/SMTP credentials and recipient address. Secrets are intentionally not logged.",
                         message.Subject, message.To);
                 }
             }
@@ -73,6 +79,14 @@ public class EmailDispatcher : BackgroundService
         var fromAddress = _queue.FromAddress.Contains('@')
             ? _queue.FromAddress
             : "no-reply@dailywork.local";
+
+        if (delivery == EmailDelivery.BrevoApi)
+        {
+            await DeliverViaBrevoApiAsync(message, fromAddress, stoppingToken);
+            _log.LogInformation("Email sent through Brevo API: \"{Subject}\" to {To}",
+                message.Subject, message.To);
+            return;
+        }
 
         using var mail = new MailMessage();
         mail.From = new MailAddress(fromAddress, settings.FromName);
@@ -124,6 +138,51 @@ public class EmailDispatcher : BackgroundService
                 message.Subject, message.To);
         else
             _log.LogInformation("Email sent: \"{Subject}\" to {To}", message.Subject, message.To);
+    }
+
+    private async Task DeliverViaBrevoApiAsync(
+        EmailMessage message, string fromAddress, CancellationToken stoppingToken)
+    {
+        var settings = _queue.Settings;
+        var payload = new Dictionary<string, object?>
+        {
+            ["sender"] = new { email = fromAddress, name = settings.FromName },
+            ["to"] = new[]
+            {
+                new { email = message.To.Trim(), name = EmailRenderer.OneLine(message.ToName) }
+            },
+            ["subject"] = EmailRenderer.OneLine(message.Subject),
+            ["textContent"] = EmailRenderer.Text(message, settings.SiteUrl),
+            ["htmlContent"] = EmailRenderer.Html(message, settings.SiteUrl)
+        };
+
+        if (message.Attachments.Count > 0)
+        {
+            payload["attachment"] = message.Attachments.Select(file => new
+            {
+                content = Convert.ToBase64String(file.Data),
+                name = Path.GetFileName(file.FileName)
+            }).ToArray();
+        }
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+        request.Headers.Add("api-key", settings.ApiKey);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = JsonContent.Create(payload);
+
+        using var limit = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        limit.CancelAfter(TimeSpan.FromSeconds(30));
+
+        var client = _httpClientFactory.CreateClient();
+        using var response = await client.SendAsync(request, limit.Token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseText = await response.Content.ReadAsStringAsync(limit.Token);
+            if (responseText.Length > 800) responseText = responseText[..800];
+            throw new HttpRequestException(
+                $"Brevo API returned HTTP {(int)response.StatusCode} ({response.StatusCode}): {responseText}");
+        }
     }
 }
 

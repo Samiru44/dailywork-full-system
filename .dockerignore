@@ -1,0 +1,15 @@
+.git
+.github
+**/bin
+**/obj
+**/.vs
+**/node_modules
+**/email-outbox
+**/uploads
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/jwt-key.local.txt
+**/.env
+**/.env.*
+*.zip
