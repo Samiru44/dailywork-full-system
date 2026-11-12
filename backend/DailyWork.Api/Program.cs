@@ -116,6 +116,9 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<RecommendationService>();
 builder.Services.AddSingleton<LoginThrottle>();
 
+// EmailDispatcher uses IHttpClientFactory for Brevo's HTTPS transactional email API.
+builder.Services.AddHttpClient();
+
 // ---------- Email ----------
 // Settings come from the "Smtp" section of appsettings.json or from
 // Smtp__... environment variables. Until a mail server is configured,
