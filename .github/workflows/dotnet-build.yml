@@ -45,7 +45,7 @@ jobs:
           PORT: 5080
         run: |
           set -euo pipefail
-          dotnet run --no-build --no-launch-profile --project backend/DailyWork.Api/DailyWork.Api.csproj > app-smoke.log 2>&1 &
+          dotnet run --configuration Release --no-build --no-launch-profile --project backend/DailyWork.Api/DailyWork.Api.csproj > app-smoke.log 2>&1 &
           app_pid=$!
           trap 'kill "$app_pid" 2>/dev/null || true' EXIT
 

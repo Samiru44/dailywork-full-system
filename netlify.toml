@@ -1,0 +1,17 @@
+# DailyWork frontend deployment on Netlify.
+# The website is already compiled into backend/DailyWork.Api/wwwroot.
+[build]
+  publish = "backend/DailyWork.Api/wwwroot"
+
+# Keep API calls same-origin in the browser; replace this host after Koyeb deploy.
+[[redirects]]
+  from = "/api/*"
+  to = "https://YOUR-KOYEB-APP.koyeb.app/api/:splat"
+  status = 200
+  force = true
+
+# React single-page application fallback.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
