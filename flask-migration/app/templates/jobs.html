@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% block title %}Find Jobs · DailyWork{% endblock %}{% block content %}
+<h1 class="h2 mb-3">Find Jobs</h1>
+<form action="{{url_for('webui.jobs')}}" class="row g-2 mb-4"><div class="col-md-8"><label for="search" class="visually-hidden">Search jobs</label>
+<input id="search" class="form-control" name="search" placeholder="Job title or keyword" value="{{keyword}}"></div>
+<div class="col-md-4"><button class="btn btn-primary w-100">Search</button></div></form>
+<div class="row g-3">{% for job in jobs %}<div class="col-md-6"><div class="card h-100"><div class="card-body">
+<h2 class="h5">{{job.title}}</h2><p>{{job.category}} · {{job.location}}</p><p class="fw-bold">Rs. {{'%.2f'|format(job.pay)}} / {{job.per}}</p>
+<a class="btn btn-outline-primary" href="{{url_for('webui.job_detail',id=job.id)}}">View job</a></div></div></div>
+{% else %}<p>No matching jobs found.</p>{% endfor %}</div>{% endblock %}

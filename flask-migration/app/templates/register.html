@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% block title %}Register · DailyWork{% endblock %}{% block content %}
+<div class="row justify-content-center"><div class="col-lg-6"><div class="card shadow-sm"><div class="card-body p-4"><h1 class="h3 mb-3">Create an account</h1>
+<form method="post"><input type="hidden" name="csrf_token" value="{{csrf_token}}">
+<div class="mb-3"><label for="name" class="form-label">Full name</label><input class="form-control" id="name" name="name" autocomplete="name" required minlength="2"></div>
+<div class="mb-3"><label for="email" class="form-label">Email</label><input class="form-control" id="email" type="email" name="email" autocomplete="email" required></div>
+<div class="mb-3"><label for="phone" class="form-label">Phone</label><input class="form-control" id="phone" name="phone" autocomplete="tel" required></div>
+<div class="mb-3"><label for="role" class="form-label">Account type</label><select class="form-select" id="role" name="role"><option value="worker">Worker</option><option value="employer">Employer</option><option value="organization">Organization</option></select></div>
+<div class="mb-3"><label for="password" class="form-label">Password</label><input class="form-control" id="password" type="password" name="password" autocomplete="new-password" required minlength="8"><div class="form-text">At least 8 characters, with a letter and number.</div></div>
+<button class="btn btn-primary w-100">Create account</button></form></div></div></div></div>{% endblock %}

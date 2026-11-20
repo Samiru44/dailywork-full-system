@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% block title %}DailyWork — Jobs in your community{% endblock %}
+{% block content %}
+<section class="p-5 mb-4 bg-light rounded-4"><div class="row align-items-center"><div class="col-lg-8">
+<h1 class="display-5 fw-bold">Find local work with DailyWork</h1><p class="lead">Connect with employers, apply for work and keep clear records of what you've earned.</p>
+<a class="btn btn-primary btn-lg" href="{{ url_for('webui.jobs') }}">Find jobs</a></div></div></section>
+<h2 class="h4 mb-3">Recent jobs</h2><div class="row g-3">
+{% for job in jobs %}<div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body">
+<h3 class="h5">{{job.title}}</h3><p class="text-muted mb-2">{{job.category}} · {{job.location}}</p>
+<p class="fw-semibold">Rs. {{ '%.2f'|format(job.pay) }} / {{job.per}}</p>
+<a class="btn btn-outline-primary" href="{{ url_for('webui.job_detail',id=job.id) }}">View details</a>
+</div></div></div>{% else %}<p>No open jobs yet.</p>{% endfor %}
+</div>{% endblock %}

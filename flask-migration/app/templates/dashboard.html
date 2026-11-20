@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% block title %}Dashboard · DailyWork{% endblock %}{% block content %}
+<h1 class="h2">Welcome, {{ signed_in_user.name }}</h1><p class="text-muted">Account: {{ signed_in_user.role|capitalize }}</p>
+{% if signed_in_user.role == 'worker' %}<h2 class="h4 mt-4">Your applications</h2><div class="list-group">
+{% for a in apps %}<div class="list-group-item d-flex justify-content-between"><span>{{job_map[a.job_id].title if a.job_id in job_map else 'Job'}} </span><span class="badge text-bg-secondary">{{a.status}}</span></div>
+{% else %}<p>No applications yet. <a href="{{url_for('webui.jobs')}}">Find jobs</a></p>{% endfor %}</div>
+{% else %}<h2 class="h4 mt-4">Your postings</h2><div class="list-group">
+{% for j in posts %}<a class="list-group-item list-group-item-action" href="{{url_for('webui.job_detail',id=j.id)}}">{{j.title}} · {{j.status}}</a>
+{% else %}<p>No jobs posted yet.</p>{% endfor %}</div>{% endif %}
+{% endblock %}

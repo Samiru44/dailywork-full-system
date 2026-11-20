@@ -1,18 +1,61 @@
-# DailyWork Flask + MySQL + Bootstrap conversion (work in progress)
+# DailyWork Flask + MySQL + Bootstrap migration (IN PROGRESS)
 
-**Do not deploy this branch or merge into main.** The original ASP.NET Core and React application must remain online until all existing features and real-backend tests pass against Flask.
+Source baseline: [Samiru44/dailywork-full-system](https://github.com/Samiru44/dailywork-full-system) `main`, inspected 2026-11-20. Original ASP.NET Core/React system stays untouched.
 
-Target stack: Flask, SQLAlchemy, PyMySQL, MySQL 8, Jinja2 templates, Bootstrap 5, JavaScript, Alembic migrations, bcrypt-compatible hashes.
+**NOT READY FOR PRODUCTION OR FOR REPLACEMENT OF THE ORIGINAL SYSTEM.** This is a real initial conversion, not a complete feature-parity port. Do not point it at a live database or switch DNS yet.
 
-Migration has three safety gates:
-1. Mirror all 12 Entity Framework tables exactly (preserve existing PascalCase column names, foreign keys, unique indexes, timestamps, CV BLOBs and BIGINT storage for money and work units scaled by 100).
-2. Port all 16 existing controllers and React screens with matching API payloads, permissions and lifecycle rules.
-3. Pass actual MySQL end-to-end tests, verify records against source backups and rehearse rollback.
+## Implemented here
 
-**What exists so far:** A separate protected work branch, a schema conversion in progress and a local implementation package with initial Flask routes and Bootstrap pages. Full feature parity, MySQL integration, real backend tests, email/CV lifecycle and production deployment are **not yet complete**. No data, secrets or existing application files were modified.
+- MySQL-compatible SQLAlchemy 2 mapping for all **12** persistent EF Core DbSets, 153 columns, indexes and key foreign keys.
+- Equivalent integer-cents and hundredths-of-a-work-unit storage via `Scaled100` (round-half-away-from-zero). MySQL tables and columns retain EF Core naming conventions (`Users`, `PasswordHash`, etc.).
+- Configurable Flask app, bcrypt-compatible passwords, JWT authentication, role checking, security stamps, basic login throttling, basic cookie session with CSRF validation.
+- API: `auth` (register/login); `jobs` (search/detail/create/update/close); `applications` (apply/mine/job/status/add work/decide work/view work); `payments` (mine/audit/pay/confirm/dispute).
+- First Bootstrap/Jinja2 screens: public homepage, job browsing, job detail, register, login, role-aware summary dashboard.
+- Fail-safe, read-only SQLite-to-empty-MySQL transfer utility. Verifies source/destination tables, columns, row counts, aggregate scaled amount totals and CV bytes digest.
+- Seven **local** schema/migration tests (SQLite fixtures, not Flask HTTP or MySQL integration tests).
 
-Source of truth: `backend/DailyWork.Api/Data/AppDbContext.cs`, `backend/DailyWork.Api/Models`, all files under `backend/DailyWork.Api/Controllers`, `frontend-src/app.jsx` and `docs/test-evidence/test_real_backend.py`.
+## NOT yet migrated (blocking launch)
 
-Do not point development Flask at the production SQLite/PostgreSQL database. Database migration must be read-only on the original and write only into a new, empty MySQL schema.
+- Profile and CV HTTP endpoints, recommendation scoring and notifications UI, employer/organization/project pages and API, categories, contact messages, ratings, reports/CSV/email, administrative pages, system and email notifications, scheduled/background email, full Bootstrap interactivity and all current React views.
+- Existing API response parity is not yet tested against the live ASP.NET backend. Some implemented routes are preliminary and require edge-case verification (especially payment and employment lifecycles).
+- MySQL integration tests, browser tests, concurrent payment tests, accessibility/visual comparison, production deployment and email integration.
+- Direct PostgreSQL-to-MySQL transfer (the current data-transfer utility supports only SQLite files).
+- The default Bootstrap stylesheet is loaded through a CDN; bundle a fixed, reviewed version for production.
 
-To complete: port remaining API modules (profile/CV, recommendations, notifications, categories, contact, employer, organization, projects, ratings, reports/CSV/email, statistics, administration); convert remaining frontend screens; add test parity and release documentation.
+## Safe local setup
+
+Use Python 3.11+ and **a new empty MySQL 8 database** (never the original). From this folder:
+
+```bash
+python -m venv .venv
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt
+# Configure DATABASE_URL, DAILYWORK_JWT_KEY and FLASK_SECRET_KEY in the environment.
+# Example: mysql+pymysql://dailywork_user:YOUR_PASSWORD@localhost:3306/dailywork_flask?charset=utf8mb4
+python -m scripts.create_schema                   # inspect DDL: NO CHANGES
+python -m scripts.create_schema --apply           # ONLY with a fresh, empty MySQL schema
+python run.py
+```
+
+For schema/migration unit tests:
+
+```bash
+python -m pytest -q tests/test_models.py tests/test_migration.py
+```
+
+## Optional copy of *real* legacy SQLite data
+
+1. Stop writes on the original system, take a consistent **offline backup** of `dailywork.db` (including WAL, if applicable) and retain the original backup elsewhere.
+2. Prepare a new empty MySQL database and carefully review `scripts.create_schema --apply` before running it.
+3. `python -m scripts.migrate_data --sqlite /path/to/SNAPSHOT.db` (checks only, **no writes**).
+4. When checks pass and cutover is properly scheduled: `python -m scripts.migrate_data --sqlite /path/to/SNAPSHOT.db --apply`.
+5. Compare per-table record counts, amounts and CV digests. Test existing password verification, end-to-end work/payment workflows and rollback before launch.
+
+This tool fails closed when destination tables contain rows, expected columns are missing, or money is not in integer cents. The source is always read-only. It does not make a PostgreSQL export automatically. Migration must use the actual app database, not Visual Studio's `.vs` workspace SQLite database.
+
+## Testing and release gate
+
+**Do not replace `main` or the deployed .NET system until all 16 original controllers and the complete React interface have been ported and verified.** Run original ASP.NET test suite on real backend first. Adapt `docs/test-evidence/test_real_backend.py` to test both original and new backends. Check money (cents), auth/role changes, CV bytes, payment audit, partial payments and worker acknowledgements, emails and recommendations; then perform a rollback rehearsal with a consistent database snapshot.
+
+No database contents, customer data or secrets have been committed here. This starter can be used as a migration branch; it is not a finished production conversion.

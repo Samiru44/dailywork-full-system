@@ -1,0 +1,4 @@
+:root {--bs-primary:#165a99;--bs-primary-rgb:22,90,153;}
+body {background:#f8fafc;color:#12263a;min-height:100vh;}
+.card {border-color:#d9e5ee;border-radius:1rem;}
+.btn {border-radius:.6rem;}

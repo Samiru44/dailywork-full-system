@@ -1,0 +1,14 @@
+{% extends 'base.html' %}{% block title %}{{job.title}} · DailyWork{% endblock %}{% block content %}
+<div class="row g-4"><div class="col-lg-8"><h1 class="h2">{{job.title}}</h1>
+<p class="text-muted">{{job.category}} · {{job.location}} · {{job.district}}</p>
+<p class="fs-4 fw-bold">Rs. {{'%.2f'|format(job.pay)}} / {{job.per}}</p>
+<div class="card"><div class="card-body"><h2 class="h5">Description</h2><p style="white-space:pre-line">{{job.description}}</p>
+<p><strong>Required skills:</strong> {{job.required_skills or 'Not specified' }}</p>
+<p><strong>Workers needed:</strong> {{job.workers_needed }}</p>
+</div></div></div><div class="col-lg-4"><div class="card"><div class="card-body"><h2 class="h5">Posted by</h2>
+<p>{{employer.name if employer else 'Employer'}}</p>
+{% if signed_in_user and signed_in_user.role=='worker' %}
+{% if applied %}<span class="badge text-bg-success">Already applied</span>{% else %}
+<p class="text-muted">Application submission is currently available through the Flask API while the form is migrated.</p>
+{% endif %}{% else %}<a class="btn btn-primary" href="{{url_for('webui.login')}}">Sign in to apply</a>{% endif %}
+</div></div></div></div>{% endblock %}
